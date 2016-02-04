@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/CSUMB.iml" filepath="$PROJECT_DIR$/CSUMB.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CSUMBAndroid.iml" filepath="$PROJECT_DIR$/CSUMBAndroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

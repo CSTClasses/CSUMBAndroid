@@ -1,17 +1,26 @@
 package com.synload.csumb;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
 import android.view.MenuItem;
-import com.roomorama.caldroid.CaldroidFragment;
+import android.view.View;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
 
+import com.roomorama.caldroid.CaldroidFragment;
+import com.roomorama.caldroid.CaldroidListener;
+
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 
 public class Calender extends FragmentActivity  {
     public static Calendar cal;
     public static CaldroidFragment caldroidFragment;
+    public static RelativeLayout header;
     public static Calender current;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,16 +28,63 @@ public class Calender extends FragmentActivity  {
         setContentView(R.layout.activity_calender);
         current=this;
         caldroidFragment = new CaldroidFragment();
+        header = (RelativeLayout) findViewById(R.id.Calender_header);
         Bundle args = new Bundle();
         cal = Calendar.getInstance();
         args.putInt(CaldroidFragment.MONTH, cal.get(Calendar.MONTH) + 1);
         args.putInt(CaldroidFragment.YEAR, cal.get(Calendar.YEAR));
         caldroidFragment.setArguments(args);
+        final CaldroidListener listener = new CaldroidListener() {
+
+            @Override
+            public void onSelectDate(Date date, View view) {
+                if(CSUMBAPI.assignments.containsKey(date.toString())) {
+                    ArrayList<Assignment> asses = CSUMBAPI.assignments.get(date.toString());
+                    String output = "";
+                    for(Assignment ass: asses){
+                        output+="\n"+ass.clazz;
+                    }
+                    Toast.makeText(getApplicationContext(), asses.size()+" Assignments Due!"+output, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onChangeMonth(int month, int year) {
+
+            }
+
+            @Override
+            public void onLongClickDate(Date date, View view) {
+                if(CSUMBAPI.assignments.containsKey(date.toString())){
+                    Bundle b = new Bundle();
+                    b.putString("date", date.toString());
+                    Intent i = new Intent(Calender.current, Details.class);
+                    i.putExtras(b);
+                    startActivity(i);
+                }
+            }
+
+            @Override
+            public void onCaldroidViewCreated() {
+
+            }
+
+        };
+        caldroidFragment.setCaldroidListener(listener);
         FragmentTransaction t = getSupportFragmentManager().beginTransaction();
         t.replace(R.id.calender, caldroidFragment);
         t.commit();
-        CSUMBAPI.login("user", "pass");
-        CSUMBAPI.getClasses();
+        CSUMBAPI.init();
+        if(this.getIntent().getExtras()!=null && this.getIntent().getExtras().size()>0 && CSUMBAPI.isLoggedIn==false){
+            if(this.getIntent().getExtras().containsKey("username")){
+                CSUMBAPI.login(this.getIntent().getExtras().getString("username"), this.getIntent().getExtras().getString("password"));
+            }
+        }else if(CSUMBAPI.isLoggedIn==false) {
+            // switch to login activity
+            this.startActivity(new Intent(this, LoginActivity.class));
+        }else{
+            CSUMBAPI.getClasses();
+        }
     }
 
     @Override

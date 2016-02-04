@@ -23,4 +23,6 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.loopj.android:android-async-http:1.4.9'
     compile 'com.roomorama:caldroid:2.3.1'
+    compile 'com.google.android.gms:play-services:7.8.0'
+    compile 'com.android.support:appcompat-v7:23.0.0'
 }
