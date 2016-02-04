@@ -7,6 +7,8 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -20,7 +22,7 @@ import java.util.Date;
 public class Calender extends FragmentActivity  {
     public static Calendar cal;
     public static CaldroidFragment caldroidFragment;
-    public static RelativeLayout header;
+    public static LinearLayout header;
     public static Calender current;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +30,7 @@ public class Calender extends FragmentActivity  {
         setContentView(R.layout.activity_calender);
         current=this;
         caldroidFragment = new CaldroidFragment();
-        header = (RelativeLayout) findViewById(R.id.Calender_header);
+        header = (LinearLayout) findViewById(R.id.Calender_header);
         Bundle args = new Bundle();
         cal = Calendar.getInstance();
         args.putInt(CaldroidFragment.MONTH, cal.get(Calendar.MONTH) + 1);
@@ -75,16 +77,21 @@ public class Calender extends FragmentActivity  {
         t.replace(R.id.calender, caldroidFragment);
         t.commit();
         CSUMBAPI.init();
-        if(this.getIntent().getExtras()!=null && this.getIntent().getExtras().size()>0 && CSUMBAPI.isLoggedIn==false){
+        if(this.getIntent().getExtras()!=null && this.getIntent().getExtras().size()>0){
             if(this.getIntent().getExtras().containsKey("username")){
                 CSUMBAPI.login(this.getIntent().getExtras().getString("username"), this.getIntent().getExtras().getString("password"));
             }
-        }else if(CSUMBAPI.isLoggedIn==false) {
-            // switch to login activity
-            this.startActivity(new Intent(this, LoginActivity.class));
         }else{
             CSUMBAPI.getClasses();
         }
+        Button m = (Button) findViewById(R.id.logout);
+        m.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CSUMBAPI.logout();
+                Calender.current.startActivity(new Intent(Calender.current, LoginActivity.class));
+            }
+        });
     }
 
     @Override

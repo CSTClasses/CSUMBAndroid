@@ -30,6 +30,21 @@ public class CSUMBAPI {
     public static PersistentCookieStore myCookieStore;
     public static Map<String, String> classes = new HashMap<String, String>();
     public static Map<String, ArrayList<Assignment>> assignments = new HashMap<String, ArrayList<Assignment>>();
+    public static void logout(){
+        assignments = new HashMap<String, ArrayList<Assignment>>();
+        classes = new HashMap<String, String>();
+        isLoggedIn = false;
+        myCookieStore.clear();
+        client.get("https://sso.csumb.edu/cas/logout", new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+
+            }
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+            }
+        });
+    }
     public static void getClasses(){
         isLoggedIn = true;
         client.get("https://ilearn.csumb.edu", new AsyncHttpResponseHandler() {
@@ -156,90 +171,79 @@ public class CSUMBAPI {
     }
     public static void login(final String username, final String password){
         RequestParams params = new RequestParams();
-        // Initialize Variables
-        myCookieStore.clear();
-        client.get("https://sso.csumb.edu/cas/logout", new AsyncHttpResponseHandler() {
+        client.get("https://sso.csumb.edu/cas/login?service=https%3A%2F%2Filearn.csumb.edu%2Flogin%2Findex.php%3FauthCAS%3DCAS", new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-                //String i = new String(response);
-                //System.out.println(i);
-                client.get("https://sso.csumb.edu/cas/login?service=https%3A%2F%2Filearn.csumb.edu%2Flogin%2Findex.php%3FauthCAS%3DCAS", new AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-                        String data = new String(response);
-                        System.out.println(data);
-                        RequestParams params = new RequestParams();
-                        try {
-                            Pattern regex = Pattern.compile("name=\"(.*?)\" value=\"(.*?)\"");
-                            Matcher regexMatcher = regex.matcher(data);
-                            while (regexMatcher.find()) {
-                                String key = regexMatcher.group(1);
-                                String val = regexMatcher.group(2);
-                                if (key.equalsIgnoreCase("lt") || key.equalsIgnoreCase("execution")) {
-                                    params.add(key, val);
-                                    //System.out.println("findMe 2: " + key + "=" + val);
-                                }
-                            }
-                        } catch (PatternSyntaxException ex) {}
-                        if (params.has("execution")) {
-                            params.add("username", username);
-                            params.add("password", password);
-                            params.add("_eventId", "submit");
-                            params.add("submit", "Log In");
-                            try{
-                                Thread.sleep(2);
-                            }catch(Exception e){}
-                            client.post("https://sso.csumb.edu/cas/login?service=https%3A%2F%2Filearn.csumb.edu%2Flogin%2Findex.php%3FauthCAS%3DCAS", params, new AsyncHttpResponseHandler() {
-                                @Override
-                                public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-                                    String data = new String(response);
-                                    //Calender.textViewToChange.setText(data);
-                                    //System.out.println(data);
-                                    CSUMBAPI.getClasses();
-                                }
-
-                                @Override
-                                public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-                                    //String data = new String(errorResponse);
-                                    if(statusCode==302){
-                                        String location= null;
-                                        for(Header h: headers){
-                                            System.out.println("findMe 3:"+h.getName()+" = "+h.getValue());
-                                            if(h.getName().equalsIgnoreCase("location")){
-                                                location = h.getValue();
-                                            }
-                                        }
-                                        if(location!=null) {
-                                            client.get(location, new AsyncHttpResponseHandler() {
-                                                @Override
-                                                public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-                                                    CSUMBAPI.getClasses();
-                                                }
-
-                                                @Override
-                                                public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-                                                    //String data = new String(errorResponse);
-                                                    if (statusCode == 302) {
-                                                        CSUMBAPI.getClasses();
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    }
-                                }
-                            });
-                        } else {
-                            CSUMBAPI.getClasses();
+                String data = new String(response);
+                //System.out.println(data);
+                RequestParams params = new RequestParams();
+                try {
+                    Pattern regex = Pattern.compile("name=\"(.*?)\" value=\"(.*?)\"");
+                    Matcher regexMatcher = regex.matcher(data);
+                    while (regexMatcher.find()) {
+                        String key = regexMatcher.group(1);
+                        String val = regexMatcher.group(2);
+                        if (key.equalsIgnoreCase("lt") || key.equalsIgnoreCase("execution")) {
+                            params.add(key, val);
+                            //System.out.println("findMe 2: " + key + "=" + val);
                         }
                     }
+                } catch (PatternSyntaxException ex) {}
+                if (params.has("execution")) {
+                    params.add("username", username);
+                    params.add("password", password);
+                    params.add("_eventId", "submit");
+                    params.add("submit", "Log In");
+                    client.post("https://sso.csumb.edu/cas/login?service=https%3A%2F%2Filearn.csumb.edu%2Flogin%2Findex.php%3FauthCAS%3DCAS", params, new AsyncHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+                            String data = new String(response);
+                            //Calender.textViewToChange.setText(data);
+                            //System.out.println(data);
+                            CSUMBAPI.getClasses();
+                        }
 
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-                    }
-                });
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                            //String data = new String(errorResponse);
+                            if(statusCode==302){
+                                String location= null;
+                                for(Header h: headers){
+                                    System.out.println("findMe 3:"+h.getName()+" = "+h.getValue());
+                                    if(h.getName().equalsIgnoreCase("location")){
+                                        location = h.getValue();
+                                    }
+                                }
+                                if(location!=null) {
+                                    client.get(location, new AsyncHttpResponseHandler() {
+                                        @Override
+                                        public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+                                            CSUMBAPI.getClasses();
+                                        }
+
+                                        @Override
+                                        public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                                            //String data = new String(errorResponse);
+                                            if (statusCode == 302) {
+                                                CSUMBAPI.getClasses();
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    CSUMBAPI.getClasses();
+                }
             }
+
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {}
+            public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                if (statusCode == 302) {
+                    CSUMBAPI.getClasses();
+                }
+            }
         });
     }
 }

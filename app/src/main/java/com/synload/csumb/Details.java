@@ -20,7 +20,7 @@ public class Details extends Activity {
             html+="<tr><td>"+ass.title+"</td></tr>";
             html+="<tr><td><a href=\"https://ilearn.csumb.edu/mod/assign/view.php?id="+ass.id+"\">Go to assignment</a></td></tr>";
             html+="<tr><td>"+ass.description+"</td></tr>";
-            html+="<tr><td>&nbsp;</td></tr>";
+            html+="<tr><td><hr/></td></tr>";
         }
         wv.loadData(html+"</table>", "text/html", "utf-8");
     }
