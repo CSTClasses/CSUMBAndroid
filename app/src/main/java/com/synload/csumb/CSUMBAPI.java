@@ -3,10 +3,7 @@ package com.synload.csumb;
 import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.PersistentCookieStore;
-import com.loopj.android.http.RequestParams;
+import com.loopj.android.http.*;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,14 +21,15 @@ import cz.msebera.android.httpclient.Header;
  * Created by Nathaniel on 2/2/2016.
  */
 public class CSUMBAPI {
-
     public static AsyncHttpClient client;
     public static boolean isLoggedIn=false;
     public static PersistentCookieStore myCookieStore;
+    public static Map<Date, Integer> assignmentStatus = new HashMap<Date, Integer>();
     public static Map<String, String> classes = new HashMap<String, String>();
     public static Map<String, ArrayList<Assignment>> assignments = new HashMap<String, ArrayList<Assignment>>();
     public static void logout(){
         assignments = new HashMap<String, ArrayList<Assignment>>();
+        assignmentStatus = new HashMap<Date, Integer>();
         classes = new HashMap<String, String>();
         isLoggedIn = false;
         myCookieStore.clear();
@@ -95,7 +93,35 @@ public class CSUMBAPI {
                             Date d = dayFormatter.parse(regexMatcher.group(3).replaceAll("(?s), ([0-9]+):([0-9]+) (AM|PM)", ""));
                             Date t = timeFormatter.parse(regexMatcher.group(3));
                             //System.out.println(d.toString());
-                            Calender.caldroidFragment.setBackgroundResourceForDate(R.color.caldroid_light_red, d );
+                            boolean foundMatch = false;
+                            try {
+                                Pattern regexc = Pattern.compile("Submitted for grading", Pattern.DOTALL);
+                                Matcher regexMatcherc = regexc.matcher(data);
+                                foundMatch = regexMatcherc.find();
+                            } catch (PatternSyntaxException ex) {
+                            }
+                            if(foundMatch){
+                                if(assignmentStatus.containsKey(d)){
+                                    if(assignmentStatus.get(d) == 0) {
+                                        Calender.caldroidFragment.setBackgroundResourceForDate(R.color.Orange, d);
+                                        assignmentStatus.put(d, 2);
+                                    }else if(assignmentStatus.get(d) == 1) {
+                                        // keep green
+                                    }
+                                }else{
+                                    Calender.caldroidFragment.setBackgroundResourceForDate(R.color.Green, d);
+                                    assignmentStatus.put(d,1);
+                                }
+                            }else{
+                                if(assignmentStatus.containsKey(d) && assignmentStatus.get(d) == 1) {
+                                    Calender.caldroidFragment.setBackgroundResourceForDate(R.color.Orange, d);
+                                    assignmentStatus.put(d,2);
+                                }else{
+                                    Calender.caldroidFragment.setBackgroundResourceForDate(R.color.Red, d);
+                                    assignmentStatus.put(d,0);
+                                }
+                            }
+
                             Calender.caldroidFragment.refreshView();
                             String title = null;
                             String id = null;
@@ -128,7 +154,6 @@ public class CSUMBAPI {
                                 }
                             }*/
                         }catch(Exception e){}
-
                     }
                 } catch (PatternSyntaxException ex) {
                     // Syntax error in the regular expression
@@ -140,6 +165,7 @@ public class CSUMBAPI {
     }
     public static void getAssignments(){
         assignments = new HashMap<String, ArrayList<Assignment>>();
+        assignmentStatus = new HashMap<Date, Integer>();
         for(final Map.Entry<String, String> classData :classes.entrySet()){
             client.get("https://ilearn.csumb.edu/mod/assign/index.php?id="+classData.getKey(), new AsyncHttpResponseHandler() {
                 @Override

@@ -23,11 +23,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".Details"
             android:label="@string/title_activity_details" >
         </activity>
+
+        <service
+            android:name=".CheckAssignment"
+            android:exported="false" >
+        </service>
     </application>
 
 </manifest>
