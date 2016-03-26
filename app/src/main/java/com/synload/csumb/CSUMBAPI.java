@@ -49,28 +49,16 @@ public class CSUMBAPI {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                 String data = new String(response);
-
-                String ResultString = null;
-                try {
-                    Pattern regex = Pattern.compile("<span>My courses</span>(?s:.*?)<ul>(?s:.*?)</ul>(?s:.*?)</li>");
-                    Matcher regexMatcher = regex.matcher(data);
-                    if (regexMatcher.find()) {
-                        ResultString = regexMatcher.group();
-                    }
-                    if(ResultString!=null) {
-                        try {
-                            regex = Pattern.compile("title=\"(.*?)\" href=\"https://ilearn\\.csumb\\.edu/course/view\\.php\\?id=([0-9]+)\"");
-                            regexMatcher = regex.matcher(ResultString);
-                            while (regexMatcher.find()) {
-                                classes.put(regexMatcher.group(2),regexMatcher.group(1));
-                            }
-                        } catch (PatternSyntaxException ex) {
+                    try {
+                        Pattern regex = Pattern.compile("<h3 class=\"coursename\"><a class=\"\" href=\"https://ilearn\\.csumb\\.edu/course/view.php\\?id=([0-9]+)\">(.*?)</a></h3>", Pattern.DOTALL);
+                        Matcher regexMatcher = regex.matcher(data);
+                        while (regexMatcher.find()) {
+                            classes.put(regexMatcher.group(1),regexMatcher.group(2));
                         }
-                        CSUMBAPI.getAssignments();
-                        Calender.current.setTitle("CSUMB Classes "+classes.size());
-
+                    } catch (PatternSyntaxException ex) {
                     }
-                } catch (PatternSyntaxException ex) {}
+                    CSUMBAPI.getAssignments();
+                    Calender.current.setTitle("CSUMB Classes "+classes.size());
             }
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {}

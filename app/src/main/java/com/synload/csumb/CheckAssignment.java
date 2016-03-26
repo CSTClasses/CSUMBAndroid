@@ -21,7 +21,7 @@ public class CheckAssignment extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             final String action = intent.getAction();
-
+            //CSUMBAPI.getAssignments();
         }
     }
 }
